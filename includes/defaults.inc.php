@@ -276,6 +276,7 @@ $config['autodiscovery']['snmp_scan']        = TRUE; // Autodiscover hosts via S
 $config['autodiscovery']['libvirt']          = TRUE; // Autodiscover hosts found via libvirt
 $config['autodiscovery']['vmware']           = TRUE; // Autodiscover hosts found via vmware
 $config['autodiscovery']['proxmox']          = FALSE; // Autodiscover hosts found via Proxmox VE agent app (beware timeouts during poller!)
+$config['autodiscovery']['docker']           = FALSE; // Autodiscover hosts found via Docker
 $config['autodiscovery']['ip_nets']          = [ "127.0.0.0/8", "192.168.0.0/16", "10.0.0.0/8", "172.16.0.0/12" ]; // Networks to permit autodiscovery
 $config['autodiscovery']['ping_skip']        = FALSE; // Skip icmp echo checks during autodiscovery (beware timeouts during discovery!)
 $config['autodiscovery']['recheck_interval'] = 86400; // If host is found, but it is not discovered by any reason, the interval, when you can try another check (default 24 hours)

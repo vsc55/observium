@@ -1,0 +1,17 @@
+#!/usr/bin/php
+<?php
+
+$dockerPsOutput = shell_exec('docker ps -a --format "json"');
+$dockerStatsOutput = shell_exec('docker stats --no-stream --format "json"');
+
+$dockerInfo = array_map('json_decode', explode("\n", trim($dockerPsOutput)));
+$dockerStats = array_map('json_decode', explode("\n", trim($dockerStatsOutput)));
+
+$result = [
+    "info"  => $dockerInfo,
+    "stats" => $dockerStats
+];
+
+
+echo "<<<docker>>>";
+echo json_encode($result, JSON_PRETTY_PRINT) . PHP_EOL;

@@ -20,6 +20,7 @@ function autodiscovery_device($hostname, $remote_ip = NULL, $protocol = NULL, $r
         case 'bgp':
         case 'ospf':
         case 'libvirt':
+        case 'docker':
         case 'proxmox':
         case 'vmware':
             $source = strtolower($protocol);

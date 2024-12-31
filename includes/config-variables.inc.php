@@ -540,6 +540,15 @@ $config_variable[$setting]['shortdesc']  = "This enables autodiscovery of virtua
                                             this doesn't enable or disable the libvirt virtual machine tracking features, but controls whether
                                             Observium should try to auto-add devices it sees via libvirt.";
 
+$setting                                 = 'autodiscovery|docker';
+$config_variable[$setting]['section']    = $section;
+$config_variable[$setting]['subsection'] = 'Device Autodiscovery';
+$config_variable[$setting]['name']       = 'Enable autodiscovery via Docker';
+$config_variable[$setting]['type']       = 'bool';
+$config_variable[$setting]['shortdesc']  = "This enables autodiscovery of Docker containers detected through the Docker Unix Agent. Note that
+                                            this doesn't enable or disable Docker container monitoring features, but controls whether 
+                                            Observium should attempt to auto-add the containers it discovers via Docker.";
+
 $setting                                 = 'autodiscovery|proxmox';
 $config_variable[$setting]['section']    = $section;
 $config_variable[$setting]['subsection'] = 'Device Autodiscovery';
