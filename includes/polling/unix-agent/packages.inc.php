@@ -6,7 +6,7 @@
  *
  * @package        observium
  * @subpackage     poller
- * @copyright  (C) Adam Armstrong
+ * @copyright  (C) 2006-2013 Adam Armstrong, (C) 2013-2023 Observium Limited
  *
  */
 
@@ -65,6 +65,39 @@ if (!safe_empty($agent_data['dpkg'])) {
     }
 
     foreach (explode("\n", $agent_data['dpkg']) as $package) {
+        [$name, $pversion, $arch, $size] = explode(" ", $package);
+        $build                                                      = "";
+        $pkgs[$manager][$name][$arch][$pversion][$build]['manager'] = $manager;
+        $pkgs[$manager][$name][$arch][$pversion][$build]['name']    = $name;
+        $pkgs[$manager][$name][$arch][$pversion][$build]['arch']    = $arch;
+        $pkgs[$manager][$name][$arch][$pversion][$build]['version'] = $pversion;
+        $pkgs[$manager][$name][$arch][$pversion][$build]['build']   = $build;
+        $pkgs[$manager][$name][$arch][$pversion][$build]['size']    = (int)$size * 1024;
+        $pkgs[$manager][$name][$arch][$pversion][$build]['status']  = '1';
+        $text                                                       = $manager . "-" . $name . "-" . $arch . "-" . $pversion . "-" . $build;
+        $pkgs_id[]                                                  = $pkgs[$manager][$name][$arch][$pversion][$build];
+    }
+}
+
+// ebuild
+if (!safe_empty($agent_data['ebuild'])) {
+    echo("\nebuild Packages: ");
+    // Build array of existing packages
+    $manager = "ebuild";
+
+    foreach (dbFetchRows("SELECT * FROM `packages` WHERE `device_id` = ?", [$device['device_id']]) as $pkg_db) {
+        $pkgs_db[$pkg_db['manager']][$pkg_db['name']][$pkg_db['arch']][$pkg_db['version']][$pkg_db['build']]['id']     = $pkg_db['pkg_id'];
+        $pkgs_db[$pkg_db['manager']][$pkg_db['name']][$pkg_db['arch']][$pkg_db['version']][$pkg_db['build']]['status'] = $pkg_db['status'];
+        $pkgs_db[$pkg_db['manager']][$pkg_db['name']][$pkg_db['arch']][$pkg_db['version']][$pkg_db['build']]['size']   = $pkg_db['size'];
+	$pkgs_db_id[$pkg_db['pkg_id']]['text']                                                                         = $pkg_db['manager'] . "-" . $pkg_db['name'] . "-" . $pkg_db['arch'] . "-" . $pkg_db['version'] . "-" . $pkg_db['build'];
+        $pkgs_db_id[$pkg_db['pkg_id']]['manager']                                                                      = $pkg_db['manager'];
+        $pkgs_db_id[$pkg_db['pkg_id']]['name']                                                                         = $pkg_db['name'];
+        $pkgs_db_id[$pkg_db['pkg_id']]['arch']                                                                         = $pkg_db['arch'];
+        $pkgs_db_id[$pkg_db['pkg_id']]['version']                                                                      = $pkg_db['version'];
+        $pkgs_db_id[$pkg_db['pkg_id']]['build']                                                                        = $pkg_db['build'];
+    }
+
+    foreach (explode("\n", $agent_data['ebuild']) as $package) {
         [$name, $pversion, $arch, $size] = explode(" ", $package);
         $build                                                      = "";
         $pkgs[$manager][$name][$arch][$pversion][$build]['manager'] = $manager;

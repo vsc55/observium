@@ -18,27 +18,30 @@ $dockers_stats        = $dockers->stats;
 $dockers_stats_result = [];
 unset($dockers);
 
-function convertToBytes($size) {
-    $units = [
-        'B'   => 1,
-        'kB'  => 1000,
-        'MB'  => 1000 ** 2,
-        'GB'  => 1000 ** 3,
-        'TB'  => 1000 ** 4,
-        'KiB' => 1024,
-        'MiB' => 1024 ** 2,
-        'GiB' => 1024 ** 3,
-        'TiB' => 1024 ** 4
-    ];
-    $return_data = "0";
-    $size = trim($size);
-    foreach ($units as $unit => $factor) {
-        if (stripos($size, $unit) !== false) {
-            $value = floatval($size);
-            $return_data = $value * $factor;
+if (! function_exists('convertToBytesDocker'))
+{
+    function convertToBytesDocker($size = "0") {
+        $units = [
+            'B'   => 1,
+            'kB'  => 1000,
+            'MB'  => 1000 ** 2,
+            'GB'  => 1000 ** 3,
+            'TB'  => 1000 ** 4,
+            'KiB' => 1024,
+            'MiB' => 1024 ** 2,
+            'GiB' => 1024 ** 3,
+            'TiB' => 1024 ** 4
+        ];
+        $return_data = "0";
+        $size = trim($size);
+        foreach ($units as $unit => $factor) {
+            if (stripos($size, $unit) !== false) {
+                $value = floatval($size);
+                $return_data = $value * $factor;
+            }
         }
+        return $return_data;
     }
-    return $return_data;
 }
 
 //Stats:
@@ -83,15 +86,15 @@ foreach ($dockers_stats as $docker_stats)
         if (in_array($key, ["BlockIO", "NetIO"])) {
             list($value1, $value2) = explode(' / ', $value);
             $value = [
-                "in"  => convertToBytes($value1),
-                "out" => convertToBytes($value2)
+                "in"  => convertToBytesDocker($value1),
+                "out" => convertToBytesDocker($value2)
             ];
         }
         if (in_array($key, ["MemUsage"])) {
             list($value1, $value2) = explode(' / ', $value);
             $value = [
-                "current" => convertToBytes($value1),
-                "max"     => convertToBytes($value2)
+                "current" => convertToBytesDocker($value1),
+                "max"     => convertToBytesDocker($value2)
             ];
         }
     }
