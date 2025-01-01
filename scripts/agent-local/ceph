@@ -1,9 +1,42 @@
 #!/bin/bash
-cephdata=`ceph -s`
-echo '<<<app-ceph>>>'
-# osd.total
-echo "`echo \"$cephdata\" | grep osdmap | awk '{ print $3 }'`"
-# osd.up
-echo "`echo \"$cephdata\" | grep osdmap | awk '{ print $5 }'`"
-# osd.in
-echo "`echo \"$cephdata\" | grep osdmap | awk '{ print $7 }'`"
+
+# ceph status
+# needs the ceph binary
+# Example output:
+#  cluster:
+#     id:     xxxxx-xxxxx-xxxxx-xxxxx
+#     health: HEALTH_OK
+
+#   services:
+#     mon: 4 daemons, quorum pve02,pve03,pve04,pve01 (age 27h)
+#     mgr: pve03(active, since 2d), standbys: pve04, pve02, pve01
+#     osd: 4 osds: 4 up (since 27h), 3 in (since 3M)
+
+#   data:
+#     pools:   2 pools, 33 pgs
+#     objects: 246.41k objects, 901 GiB
+#     usage:   2.5 TiB used, 2.9 TiB / 5.5 TiB avail
+#     pgs:     33 active+clean
+
+#   io:
+#     client:   341 B/s rd, 114 KiB/s wr, 0 op/s rd, 12 op/s wr
+
+# Chanlog:
+# 2024-12-19 - Fixed ceph status parsing (Javier Pastor)
+#
+
+CEPHBIN=$(command -v ceph)
+if [[ -x "$CEPHBIN" ]]; then
+    cephdata=`$CEPHBIN -s`
+
+    echo '<<<app-ceph>>>'
+    
+    # osd.total
+    echo "$cephdata" | grep "osd:" | awk '{print $2}'
+
+    # osd.up
+    echo "$cephdata" | awk '/osd:/ {for (i=1; i<=NF; i++) if ($i == "up") print $(i-1)}'
+
+    # osd.in
+    echo "$cephdata" | awk '/osd:/ {for (i=1; i<=NF; i++) if ($i == "in") print $(i-1)}'
+fi

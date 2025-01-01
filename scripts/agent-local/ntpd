@@ -1,88 +1,99 @@
 #!/usr/bin/env php
 <?php
 
-    ///////////////////////////////////////////////////////////////////////////////////////
-    ///
-    //      A small script to grab the NTPD Server statistics from a NTPD server
-    //      Needed commands: php, ntpd, ntpq, ntpdc
-    ///
-    //      Version 1.3 By:
-    //              All In One - Dennis de Houx <info@all-in-one.be>
-    ///
-    ///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///
+//      A small script to grab the NTPD Server statistics from a NTPD server
+//      Needed commands: php, ntpd, ntpq, ntpdc
+///
+//		Version 1.4:
+//              Optimized
+//              Check if executable is available
+//      Version 1.3:
+//              All In One - Dennis de Houx <info@all-in-one.be>
+///
+///////////////////////////////////////////////////////////////////////////////////////
 
 
-    // START SETTINGS ///
+// START SETTINGS ///
 
-	$ntpq		= "ntpq";
-	$ntpdc		= "ntpq";
+const NTPQ_CMD  = "ntpq";
+const NTPDC_CMD = "ntpq";
 
-    // END SETTINGS ///
+// END SETTINGS ///
 
 
+///
+// DO NOT EDIT BENEATH THIS LINE
+///
+///////////////////////////////////////////////////////////////////////////////////////
 
-    ///
-    // DO NOT EDIT BENEATH THIS LINE
-    ///
-    ///////////////////////////////////////////////////////////////////////////////////////
+function commandExists($command)
+{
+    $path = shell_exec("command -v $command");
+    return !empty($path) && is_executable(trim($path));
+}
 
-	$cmd	= shell_exec($ntpq." -c rv");
-	$cmd2	= shell_exec($ntpdc." -c iostats");
-	$vars	= array();
-	$vars2	= array();
-	$vars	= explode(',', $cmd);
-	//$vars2	= eregi_replace(' ', '', $cmd2);
-	$vars2	= preg_replace('/ /', '', $cmd2);
-	$vars2	= explode("\n", $vars2);
+function trimValues(&$data, $value , $explode_char) {
+    foreach ($value as $item=>$value) {
+        if (!empty($value)) {
+            $temp = explode( $explode_char, $value);
+            if (isset($temp[1])) {
+                $data[trim($temp[0])] = trim($temp[1]);
+            }
+        }
+    }
+}
 
-	function doUnixAgent($vars, $vars2) {
-	    $ntpd	= array();
-	    foreach ($vars as $item=>$value) {
-		if (!empty($value)) {
-		    $temp = explode('=', $value);
-		    if (isset($temp[1])) {
-			$ntpd[trim($temp[0])] = trim($temp[1]);
-		    }
-		}
-	    }
-	    foreach ($vars2 as $item=>$value) {
-		if (!empty($value)) {
-		    $temp = explode(':', $value);
-		    if (isset($temp[1])) {
-			$ntpd[trim($temp[0])] = trim($temp[1]);
-		    }
-		}
-	    }
-	    $var['version']			= (isset($ntpd['version']) ? $ntpd['version'] : "N/A");
-	    $var['stratum']			= (isset($ntpd['stratum']) ? $ntpd['stratum'] : "U");
-	    $var['offset']			= (isset($ntpd['offset']) ? $ntpd['offset'] : "U");
-	    $var['frequency']			= (isset($ntpd['frequency']) ? $ntpd['frequency'] : "U");
-	    if (isset($ntpd['clk_jitter'])) {
-		$var['jitter']			= (isset($ntpd['clk_jitter']) ? $ntpd['clk_jitter'] : "U");
-		$var['noise']			= (isset($ntpd['sys_jitter']) ? $ntpd['sys_jitter'] : "U");
-		$var['stability']		= (isset($ntpd['clk_wander']) ? $ntpd['clk_wander'] : "U");
-	    } else {
-		$var['jitter']			= (isset($ntpd['jitter']) ? $ntpd['jitter'] : "U");
-		$var['noise']			= (isset($ntpd['noise']) ? $ntpd['noise'] : "U");
-		$var['stability']		= (isset($ntpd['stability']) ? $ntpd['stability'] : "U");
-	    }
-	    if (!empty($ntpdc) || $var['stratum'] < 16) {
-		$var['server']			= true;
-		$var['uptime']			= (isset($ntpd['timesincereset']) ? $ntpd['timesincereset'] : "U");
-		$var['buffer_recv']		= (isset($ntpd['receivebuffers']) ? $ntpd['receivebuffers'] : "U");
-		$var['buffer_free']		= (isset($ntpd['freereceivebuffers']) ? $ntpd['freereceivebuffers'] : "U");
-		$var['buffer_used']		= (isset($ntpd['usedreceivebuffers']) ? $ntpd['usedreceivebuffers'] : "U");
-		$var['packets_drop']		= (isset($ntpd['droppedpackets']) ? $ntpd['droppedpackets'] : "U");
-		$var['packets_ignore']		= (isset($ntpd['ignoredpackets']) ? $ntpd['ignoredpackets'] : "U");
-		$var['packets_recv']		= (isset($ntpd['receivedpackets']) ? $ntpd['receivedpackets'] : "U");
-		$var['packets_sent']		= (isset($ntpd['packetssent']) ? $ntpd['packetssent'] : "U");
-	    }
-	    echo "<<<app-ntpd>>>\n";
-	    foreach ($var as $item=>$count) {
-		echo $item.":".$count."\n";
-	    }
-	}
+if (!commandExists(NTPQ_CMD)) {
+    exit;
+}
 
-	doUnixAgent($vars, $vars2);
+$ntpd = [];
+trimValues($ntpd, explode(',', shell_exec(NTPQ_CMD . " -c rv")), '=');
+trimValues($ntpd, explode("\n", preg_replace('/ /', '', shell_exec(NTPDC_CMD . " -c iostats"))), ':');
 
-?>
+if (empty($ntpd)) {
+    exit;
+}
+
+$var = [
+    'version'   =>  trim($ntpd['version'], "\"") ?? "N/A",
+    'stratum'   =>  $ntpd['stratum'] ?? "U",
+    'offset'    =>  $ntpd['offset'] ?? "U",
+    'frequency' =>  $ntpd['frequency'] ?? "U",
+];
+
+if (preg_match('/-([\d.]+)$/', $var['version'], $matches)) {
+    $var['version'] = $matches[1];
+}
+
+if (isset($ntpd['clk_jitter']))
+{
+    $var['jitter']    = $ntpd['clk_jitter'] ?? "U";
+    $var['noise']     = $ntpd['sys_jitter'] ?? "U";
+    $var['stability'] = $ntpd['clk_wander'] ?? "U";
+}
+else
+{
+    $var['jitter']    = $ntpd['jitter'] ?? "U";
+    $var['noise']     = $ntpd['noise'] ?? "U";
+    $var['stability'] = $ntpd['stability'] ?? "U";
+}
+
+if (commandExists(NTPDC_CMD) || $var['stratum'] < 16) {
+    $var['server']			= true;
+    $var['uptime']			= $ntpd['timesincereset'] ?? "U";
+    $var['buffer_recv']		= $ntpd['receivebuffers'] ?? "U";
+    $var['buffer_free']		= $ntpd['freereceivebuffers'] ?? "U";
+    $var['buffer_used']		= $ntpd['usedreceivebuffers'] ?? "U";
+    $var['packets_drop']	= $ntpd['droppedpackets'] ?? "U";
+    $var['packets_ignore']	= $ntpd['ignoredpackets'] ?? "U";
+    $var['packets_recv']	= $ntpd['receivedpackets'] ?? "U";
+    $var['packets_sent']	= $ntpd['packetssent'] ?? "U";
+}
+
+echo "<<<app-ntpd>>>\n";
+foreach ($var as $item=>$count) {
+    echo sprintf("%s:%s\n", $item, $count);
+}

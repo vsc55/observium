@@ -1,9 +1,11 @@
 #!/bin/bash
 
-virtwhat=`which virt-what`
+# Install dependencies
+# apt-get install -y virt-what
 
-if [ $? -eq 0 ]
-then
-  echo '<<<virt-what>>>'
-  $virtwhat
+virtwhat=$(command -v virt-what)
+
+if [ -x "$virtwhat" ]; then
+    echo '<<<virt-what>>>'
+    $virtwhat
 fi

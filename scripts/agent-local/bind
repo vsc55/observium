@@ -3,10 +3,17 @@
 STATS_FILE=/var/cache/bind/named.stats
 
 # Remove old stats file
-rm -f $STATS_FILE
+if [[ -e "$STATS_FILE" ]]; then
+    rm -f "$STATS_FILE"
+fi
 
 # Generate new stats
-/usr/sbin/rndc stats
+RNDCBIN=$(command -v rndc)
+if [ -x "$RNDCBIN" ]; then
+	$RNDCBIN stats
+else
+	exit 1
+fi
 
 # Delay until the stats file is written
 i=0

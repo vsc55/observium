@@ -2,6 +2,7 @@
 
 #
 # This script will print the ebuilds installed packages on the system Gentoo.
+# Cache the file for 30 minutes
 #
 # Install dependencies
 # emerge -va app-portage/gentoolkit
@@ -15,18 +16,40 @@
 # TODO: Pending adding package size, now showing 1.
 #
 
-echo "<<<ebuild>>>"
-equery -C list "*" --format='$name $fullversion $mask2 1' | awk '
-{
-    key = $1  # Usa el nombre del paquete como clave
-    version = $2  # Versión completa
-    if (!seen[key] || version > seen[key]) {
-        seen[key] = version
-        line[key] = $0
-    }
-}
-END {
-    for (k in line) {
-        print line[k]
-    }
-}'
+equery=$(command -v equery)
+
+if [[ -x $equery ]]; then
+    DATE=$(date +%s)
+    FILE=/tmp/observium-agent-ebuild
+
+    NEED_UPDATE=0
+    if [[ ! -e "$FILE" ]]; then
+        NEED_UPDATE=1
+    else
+        FILEMTIME=$(stat -c %Y "$FILE")
+        FILEAGE=$(($DATE-$FILEMTIME))
+        if [[ $FILEAGE -gt 1800 ]]; then
+            NEED_UPDATE=1
+        fi
+    fi
+
+    if [[ $NEED_UPDATE -eq 1 ]]; then
+        equery -C list "*" --format='$name $fullversion $mask2 1' | awk '
+        {
+            key = $1  # Usa el nombre del paquete como clave
+            version = $2  # Versión completa
+            if (!seen[key] || version > seen[key]) {
+                seen[key] = version
+                line[key] = $0
+            }
+        }
+        END {
+            for (k in line) {
+                print line[k]
+            }
+        }'  > "$FILE"
+    fi
+
+    echo "<<<ebuild>>>"
+    cat "$FILE"
+fi

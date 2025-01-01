@@ -89,7 +89,7 @@ if (!safe_empty($agent_data['ebuild'])) {
         $pkgs_db[$pkg_db['manager']][$pkg_db['name']][$pkg_db['arch']][$pkg_db['version']][$pkg_db['build']]['id']     = $pkg_db['pkg_id'];
         $pkgs_db[$pkg_db['manager']][$pkg_db['name']][$pkg_db['arch']][$pkg_db['version']][$pkg_db['build']]['status'] = $pkg_db['status'];
         $pkgs_db[$pkg_db['manager']][$pkg_db['name']][$pkg_db['arch']][$pkg_db['version']][$pkg_db['build']]['size']   = $pkg_db['size'];
-	$pkgs_db_id[$pkg_db['pkg_id']]['text']                                                                         = $pkg_db['manager'] . "-" . $pkg_db['name'] . "-" . $pkg_db['arch'] . "-" . $pkg_db['version'] . "-" . $pkg_db['build'];
+	    $pkgs_db_id[$pkg_db['pkg_id']]['text']                                                                         = $pkg_db['manager'] . "-" . $pkg_db['name'] . "-" . $pkg_db['arch'] . "-" . $pkg_db['version'] . "-" . $pkg_db['build'];
         $pkgs_db_id[$pkg_db['pkg_id']]['manager']                                                                      = $pkg_db['manager'];
         $pkgs_db_id[$pkg_db['pkg_id']]['name']                                                                         = $pkg_db['name'];
         $pkgs_db_id[$pkg_db['pkg_id']]['arch']                                                                         = $pkg_db['arch'];

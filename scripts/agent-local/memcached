@@ -1,13 +1,68 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+# Install the python-memcached package:
+# apt-get install -y python3-memcached 
+# or
+# pip3 install python3-memcached
+#
+# This script requires the memcached server to be running and the python-memcached package.
+# The script will print the statistics of the memcached server.
+# e.g.
+# <<<app-memcached-127.0.0.1>>>
+# bytes:0
+# bytes_read:0
+# bytes_written:0
+# cmd_flush:0
+# cmd_get:0
+# cmd_set:0
+# connection_structures:0
+# curr_connections:10
+# curr_items:0
+# evictions:0
+# get_hits:0
+# get_misses:0
+# limit_maxbytes:67108864
+# listen_disabled_num:0
+# pid:1
+# pointer_size:64
+# rusage_system:0.000000
+# rusage_user:0.000000
+# threads:4
+# time:1617220000
+# total_connections:10
+# total_items:0
+# uptime:10
+# version:1.5.6
+
+
+
 import memcache
 
-servers = ('127.0.0.1:11211',)
+def get_memcached_stats(servers):
+    """Obtain memcached statistics from a list of servers."""
+    try:
+        mc = memcache.Client(servers)
+        stats_list = mc.get_stats()
+        
+        if not stats_list:
+            # print("Error: No se pudo obtener estadísticas de los servidores.")
+            return
 
-mc = memcache.Client(servers)
+        for server_stats in stats_list:
+            server, stats = server_stats
+            server_name = server.split(' ', 2)[0]
+            print(f'<<<app-memcached-{server_name}>>>')
+            for stat_name, value in sorted(stats.items()):
+                print(f'{stat_name}:{value}')
+    except Exception as e:
+        # print(f"Error: {e}")
+        pass
 
-for server_stats in mc.get_stats():
-   server, stats = server_stats
-   server = server.split(' ', 2)
-   print '<<<app-memcached-'+server[0]+'>>>'
-   for stat_name, value in sorted(stats.iteritems()):
-     print '%s:%s' % (stat_name, value)
+def main():
+    # List of memcached servers
+    servers = ['127.0.0.1:11211']
+    
+    get_memcached_stats(servers)
+
+if __name__ == "__main__":
+    main()
